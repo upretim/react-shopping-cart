@@ -3,10 +3,16 @@ import React, { Component } from 'react';
 import FilterComponent from './components/FilterComponent';
 import ProductTable from './components/ProductTable';
 import ShoppingCart from './components/ShoppingCart';
-import './App.css';
-//https://github.com/mohamedsamara
+import Modal from './components/Modal';
+
+//Redux
+import { connect } from 'react-redux';
+import * as ecomActions from './store/action';
+import {bindActionCreators} from 'redux';
 // to start server npx json-server public/db.json --port 8000
 
+
+import './App.css';
 
 class App extends Component {
   constructor(props) {
@@ -19,6 +25,7 @@ class App extends Component {
       showModal: false,
       filterByText: '',
       filterSizeText: '',
+      discountCode: '',
     };
   }
 
@@ -28,11 +35,17 @@ class App extends Component {
         return response.json();
       })
       .then((data) => {
+        // logic
         this.setState({
           products: data,
           filteredProducts: data,
         });
       });
+  //let data = "myData";
+   //this.props.getApiData(data);
+   this.props.ecomActions.getApiData()
+    //this.props.ecomActions.getApiData();
+    // cannot write here
     // console.log('Component Did mount got called', this.state.products); //this will show empty products, b/c assync call above
   }
 
@@ -63,6 +76,7 @@ class App extends Component {
   };
 
   handleFilter = (event) => {
+    this.props.filterData();
     switch (event.target.name) {
       case 'orderFilter':
         this.handleSortChange(event);
@@ -104,6 +118,7 @@ class App extends Component {
       },
       () => console.log('sorted', this.state.products)
     );
+    this.props.ecomActions.filterData(filteredProducts)
   };
 
   handleSizeFilterChange = (event) => {
@@ -125,13 +140,11 @@ class App extends Component {
       },
       () => console.log('Filtered by size', filteredProducts)
     );
+    this.props.ecomActions.filterData(filteredProducts);
   };
 
   handleRemoveFromCart = (event, item) => {
     console.log('handleRemoveFromCart', item);
-    this.setState({
-      showModal: true,
-    });
 
     let upatedCartItems = this.state.cartItems.filter(
       (product) => product.id !== item.id
@@ -145,13 +158,35 @@ class App extends Component {
     );
   };
 
-  removeItem = (event) => {
+  checkoutHandler = (event) => {
+    console.log('Checkout handler get called');
     this.setState({
-      showModal: false,
+      showModal: true,
     });
   };
 
+  checkoutConfirmHandler = (event) => {
+    console.log('Checkout confirm get called');
+    this.setState({
+      showModal: false,
+      cartItems: [],
+    });
+  };
+
+  removeItem = (event) => {};
+
+  discountCodeHandler = (event) => {
+    this.setState(
+      {
+        discountCode: event.target.value,
+      },
+      () => console.log('Discount code ', this.state.discountCode)
+    );
+  };
+
   render() {
+    console.log('Local state', this.state);
+    console.log('Props from redux store', this.props);
     return (
       <div className='container'>
         <h1>Ecommerce shopping cart Application</h1>
@@ -171,23 +206,36 @@ class App extends Component {
             <ShoppingCart
               cartItems={this.state.cartItems}
               handleRemoveFromCart={this.handleRemoveFromCart}
+              checkoutHandler={this.checkoutHandler}
             />
           </div>
+          {this.state.showModal ? (
+            <Modal
+              showModal={this.state.showModal}
+              checkoutConfirmHandler={this.checkoutConfirmHandler}
+              cartItems={this.state.cartItems}
+              discountCodeHandler={this.discountCodeHandler}
+            />
+          ) : null}
         </div>
-        {this.state.showModal && (
-          <div>
-            Are you sure
-            <button className='btn btn-primary' onClick={this.removeItem}>
-              Yes
-            </button>
-            <button className='btn btn-primary' onClick={this.exit}>
-              No
-            </button>
-          </div>
-        )}
       </div>
     );
   }
 }
 
-export default App;
+const mapStateToProps = (reducerState) => {
+  return {
+    products: reducerState.products
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+   getApiData: () => dispatch(ecomActions.getApiData("test")),
+   filterData: () => dispatch(ecomActions.filterData()),
+   ecomActions: bindActionCreators(ecomActions, dispatch)
+    //getApiData : ecomActions.getApiData
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);

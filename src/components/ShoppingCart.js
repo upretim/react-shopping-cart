@@ -2,7 +2,6 @@ import React from 'react';
 import * as utils from '../utils';
 
 const shoppingCartComponent = (props) => {
-  console.log(props.cartItems);
   let { cartItems } = props;
   let sum = 0;
   return (
@@ -33,6 +32,9 @@ const shoppingCartComponent = (props) => {
           {utils.formatPrice(
             cartItems.reduce((a, b) => a + b.price * b.count, 0)
           )}
+          <button className='btn btn-primary' onClick={props.checkoutHandler}>
+            Checkout
+          </button>
         </div>
       )}
     </div>

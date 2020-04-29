@@ -2,7 +2,6 @@ import React from 'react';
 import * as utils from '../utils';
 
 const productTable = (props) => {
-  console.log(props.products);
   const productItems = props.products.map((product) => (
     <div className='col-md-4' key={product.id}>
       <div className='thumbnail text-center'>
